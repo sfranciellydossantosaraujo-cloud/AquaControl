@@ -56,7 +56,7 @@ db.serialize(() => {
     tipo_pagamento TEXT,
     FOREIGN KEY(cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
     FOREIGN KEY(leitura_id) REFERENCES leituras(id) ON DELETE CASCADE
-  )`, (err) => {
+  )`, (err) => 
     // Adiciona a coluna tipo_pagamento caso a tabela já existisse sem ela
     db.run("ALTER TABLE taloes ADD COLUMN tipo_pagamento TEXT", (alterErr) => {
       // Ignora erro se a coluna já existir
