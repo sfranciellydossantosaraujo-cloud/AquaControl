@@ -362,18 +362,13 @@ function handleClienteSubmit(e) {
   const hidrometro = document.getElementById("clienteHidrometro").value.trim();
 
   // Se estiver editando, mantém o poço existente. Se for novo, define como "Poço 1".
-  let poco = "Poço 1";
-  if (id) {
-    const c = state.clientes.find((item) => item.id == id);
-    if (c) poco = c.poco;
-  }
-
+  const poco = id ? state.clientes.find((c) => c.id == id)?.poco || "Poço 1" : "Poço 1";
   if (!nome) {
     showToast("O nome é obrigatório", "danger");
     return;
   }
 
-  const payload = { nome, endereco, poco, hidrometro };
+  const payload = { nome, endereco, hidrometro };
   const method = id ? "PUT" : "POST";
   const url = id ? `${API_URL}/clientes/${id}` : `${API_URL}/clientes`;
 
@@ -437,7 +432,6 @@ function viewClienteDetails(id) {
       
       document.getElementById("detailClienteNome").innerText = cliente.nome;
       document.getElementById("detailClienteHidrometro").innerText = cliente.hidrometro || "-";
-      document.getElementById("detailClientePoco").innerText = cliente.poco;
       document.getElementById("detailClienteEndereco").innerText = cliente.endereco || "-";
 
       // Preencher Leituras
@@ -551,7 +545,7 @@ function updateClientSelects() {
   state.clientes.forEach((c) => {
     const opt = document.createElement("option");
     opt.value = c.id;
-    opt.innerText = `${c.nome} (${c.poco})`;
+    opt.innerText = `${c.nome}`;
     selectLeitura.appendChild(opt);
   });
 }
@@ -584,7 +578,6 @@ function renderLeiturasTable(lista) {
     tr.innerHTML = `
       <td>${formatDate(l.data)}</td>
       <td><strong>${l.cliente_nome}</strong></td>
-      <td><span class="badge ${l.cliente_poco === 'Poço 2' ? 'poco2' : 'poco1'}">${l.cliente_poco}</span></td>
       <td>${l.leitura_anterior.toFixed(1)} m³</td>
       <td>${l.leitura_atual.toFixed(1)} m³</td>
       <td><strong style="color: var(--color-primary);">${l.consumo.toFixed(1)} m³</strong></td>
@@ -598,7 +591,6 @@ function filterLeituras(query) {
   const filtered = state.leituras.filter(
     (l) =>
       l.cliente_nome.toLowerCase().includes(term) ||
-      l.cliente_poco.toLowerCase().includes(term) ||
       l.data.includes(term)
   );
   renderLeiturasTable(filtered);
@@ -859,7 +851,7 @@ function renderRelatorios() {
     return matchesSearch && matchesStatus && matchesPoco && matchesMes;
   });
 
-  // 2. Calcular Métricas Globais (com base em toda a base de faturas para o período/poço selecionado)
+  // 2. Calcular Métricas Globais (com base em toda a base de faturas para o período)
   const repTaloes = state.taloes.filter((t) => {
     const matchesPoco = pocoFilter === "todos" || t.cliente_poco === pocoFilter;
     let matchesMes = true;
@@ -924,7 +916,6 @@ function renderRelatorios() {
     tr.innerHTML = `
       <td>${formatDate(t.data_vencimento)}</td>
       <td><strong>${t.cliente_nome}</strong></td>
-      <td><span class="badge ${t.cliente_poco === 'Poço 2' ? 'poco2' : 'poco1'}">${t.cliente_poco}</span></td>
       <td>${formatDate(t.data_leitura)}</td>
       <td>${t.consumo.toFixed(1)} m³</td>
       <td><strong>${formatCurrency(t.valor)}</strong></td>
@@ -1002,7 +993,6 @@ function viewTalaoInvoice(id) {
   
   document.getElementById("detInvClienteNome").innerText = t.cliente_nome;
   document.getElementById("detInvClienteEndereco").innerText = t.cliente_endereco || "-";
-  document.getElementById("detInvClientePoco").innerText = t.cliente_poco;
   document.getElementById("detInvClienteHidrometro").innerText = t.cliente_hidrometro || "-";
 
   document.getElementById("detInvLeituraData").innerText = formatDate(t.data_leitura);
@@ -1021,7 +1011,6 @@ function viewTalaoInvoice(id) {
   
   document.getElementById("therInvClienteNome").innerText = t.cliente_nome;
   document.getElementById("therInvClienteEndereco").innerText = t.cliente_endereco || "-";
-  document.getElementById("therInvClientePoco").innerText = t.cliente_poco;
   document.getElementById("therInvClienteHidrometro").innerText = t.cliente_hidrometro || "-";
 
   document.getElementById("therInvLeituraData").innerText = formatDate(t.data_leitura);
@@ -1050,7 +1039,6 @@ function viewTalaoInvoice(id) {
   
   document.getElementById("splitClientInvClienteNome").innerText = t.cliente_nome;
   document.getElementById("splitClientInvClienteEndereco").innerText = t.cliente_endereco || "-";
-  document.getElementById("splitClientInvClientePoco").innerText = t.cliente_poco;
   document.getElementById("splitClientInvClienteHidrometro").innerText = t.cliente_hidrometro || "-";
 
   document.getElementById("splitClientInvLeituraData").innerText = formatDate(t.data_leitura);
@@ -1272,7 +1260,6 @@ function setupFormsAndModals() {
   // Relatórios
   document.getElementById("repFilterSearch").addEventListener("input", renderRelatorios);
   document.getElementById("repFilterStatus").addEventListener("change", renderRelatorios);
-  document.getElementById("repFilterPoco").addEventListener("change", renderRelatorios);
   document.getElementById("repFilterMes").addEventListener("change", renderRelatorios);
 
   // Alternador de Temas (Claro/Escuro)
